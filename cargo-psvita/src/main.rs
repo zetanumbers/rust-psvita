@@ -56,6 +56,84 @@ fn main() {
     }
 }
 
+fn get_metadata(opt: &Opt) -> Metadata {
+    let mut cmd = MetadataCommand::new();
+    cmd.features(CargoOpt::SomeFeatures(opt.features.clone()));
+    if opt.all_features {
+        cmd.features(CargoOpt::AllFeatures);
+    }
+    if opt.no_default_features {
+        cmd.features(CargoOpt::NoDefaultFeatures);
+    }
+    if let Some(manifest_path) = &opt.manifest_path {
+        cmd.manifest_path(manifest_path);
+    }
+    cmd.no_deps()
+        .exec()
+        .expect("could not get the crate's metadata")
+}
+
+fn exists_or_create_dir(dir: &Utf8Path) {
+    if !dir.exists() {
+        fs::create_dir_all(&dir).expect("could not create target directory");
+    }
+    assert!(dir.is_dir());
+}
+
+fn copy_target_configuration(target_dir: &Utf8Path) {
+    fs::write(target_dir.join(target_config::NAME), target_config::CONTENT)
+        .expect("could not copy target configuration to the target directory");
+}
+
+fn build(opt: &Opt, metadata: &Metadata) -> Vec<Utf8PathBuf> {
+    let rustflags = env::var("RUSTFLAGS").unwrap_or_default();
+    let rustflags = format!(
+        "{} -L {}",
+        rustflags,
+        vitasdk()
+            .join("arm-vita-eabi")
+            .join("lib")
+            .to_str()
+            .unwrap()
+    );
+
+    let out = Command::new(env::var("CARGO").unwrap_or(String::from("cargo")))
+        .arg("build")
+        .args(&[
+            "--target",
+            metadata.target_directory.join(target_config::NAME).as_str(),
+        ])
+        .args(&["-Z", "build-std=core"])
+        .args(&["--message-format", "json"])
+        .args(&opt.features)
+        .args(opt.all_features.then(|| "--all-features"))
+        .args(opt.no_default_features.then(|| "--no-default-features"))
+        .args(&opt.manifest_path)
+        .args(&opt.build_args)
+        .env("RUSTFLAGS", rustflags)
+        .stderr(Stdio::inherit())
+        .output()
+        .expect("could not execute cargo-build");
+
+    assert!(out.status.success(), "cargo-build failed");
+
+    // Package ids within workspace (due to `no_deps` argument)
+    let local_pkg_ids = metadata
+        .packages
+        .iter()
+        .map(|pkg| &pkg.id)
+        .collect::<HashSet<_>>();
+
+    cargo_metadata::Message::parse_stream(out.stdout.as_slice())
+        .filter_map(|msg| match msg.expect("error while parsing message") {
+            cargo_metadata::Message::CompilerArtifact(a) => Some(a),
+            _ => None,
+        })
+        .filter(|artifact| local_pkg_ids.contains(&artifact.package_id))
+        .filter_map(|artifact| artifact.executable)
+        .collect()
+}
+
 fn generate_velf(out_dir: &Utf8Path, stem: &str) -> Utf8PathBuf {
     let elf = out_dir.join(format!("{}.elf", stem));
     let output = out_dir.join(format!("{}.velf", stem));
@@ -128,82 +206,4 @@ fn vitasdk() -> PathBuf {
 
 fn vitasdk_bin() -> PathBuf {
     vitasdk().join("bin")
-}
-
-fn build(opt: &Opt, metadata: &Metadata) -> Vec<Utf8PathBuf> {
-    let rustflags = env::var("RUSTFLAGS").unwrap_or_default();
-    let rustflags = format!(
-        "{} -L {}",
-        rustflags,
-        vitasdk()
-            .join("arm-vita-eabi")
-            .join("lib")
-            .to_str()
-            .unwrap()
-    );
-
-    let out = Command::new(env::var("CARGO").unwrap_or(String::from("cargo")))
-        .arg("build")
-        .args(&[
-            "--target",
-            metadata.target_directory.join(target_config::NAME).as_str(),
-        ])
-        .args(&["-Z", "build-std=core"])
-        .args(&["--message-format", "json"])
-        .args(&opt.features)
-        .args(opt.all_features.then(|| "--all-features"))
-        .args(opt.no_default_features.then(|| "--no-default-features"))
-        .args(&opt.manifest_path)
-        .args(&opt.build_args)
-        .env("RUSTFLAGS", rustflags)
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("could not execute cargo-build");
-
-    assert!(out.status.success(), "cargo-build failed");
-
-    // Package ids within workspace (due to `no_deps` argument)
-    let local_pkg_ids = metadata
-        .packages
-        .iter()
-        .map(|pkg| &pkg.id)
-        .collect::<HashSet<_>>();
-
-    cargo_metadata::Message::parse_stream(out.stdout.as_slice())
-        .filter_map(|msg| match msg.expect("error while parsing message") {
-            cargo_metadata::Message::CompilerArtifact(a) => Some(a),
-            _ => None,
-        })
-        .filter(|artifact| local_pkg_ids.contains(&artifact.package_id))
-        .filter_map(|artifact| artifact.executable)
-        .collect()
-}
-
-fn exists_or_create_dir(dir: &Utf8Path) {
-    if !dir.exists() {
-        fs::create_dir_all(&dir).expect("could not create target directory");
-    }
-    assert!(dir.is_dir());
-}
-
-fn get_metadata(opt: &Opt) -> Metadata {
-    let mut cmd = MetadataCommand::new();
-    cmd.features(CargoOpt::SomeFeatures(opt.features.clone()));
-    if opt.all_features {
-        cmd.features(CargoOpt::AllFeatures);
-    }
-    if opt.no_default_features {
-        cmd.features(CargoOpt::NoDefaultFeatures);
-    }
-    if let Some(manifest_path) = &opt.manifest_path {
-        cmd.manifest_path(manifest_path);
-    }
-    cmd.no_deps()
-        .exec()
-        .expect("could not get the crate's metadata")
-}
-
-fn copy_target_configuration(target_dir: &Utf8Path) {
-    fs::write(target_dir.join(target_config::NAME), target_config::CONTENT)
-        .expect("could not copy target configuration to the target directory");
 }
