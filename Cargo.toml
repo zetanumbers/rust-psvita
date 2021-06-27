@@ -1,6 +1,2 @@
-[package]
-name = "min_sized_vita"
-version = "0.1.0"
-edition = "2018"
-
-[dependencies]
+[workspace]
+members = ["cargo-psvita", "examples/minimal"]
