@@ -21,12 +21,8 @@ extern "C" {
 }
 
 #[no_mangle]
-#[used]
-static test_data: [u8; 128] = [0; 128];
-
-#[no_mangle]
 pub unsafe extern "C" fn _start(_args: c_int, _argp: *const c_char) -> ! {
-    let _ = sceKernelDelayThread(2_000_000);
+    let _ = sceKernelDelayThread(10_000_000);
     let _ = sceKernelExitProcess(0);
     loop {}
 }
