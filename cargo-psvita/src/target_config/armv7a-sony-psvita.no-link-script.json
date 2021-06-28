@@ -15,6 +15,7 @@
   "max-atomic-width": 64,
   "os": "psvita",
   "panic-strategy": "abort",
+  "position-independent-executables": true,
   "pre-link-args": { "ld.lld": ["--emit-relocs"] },
   "relocation-model": "static",
   "target-pointer-width": "32",
