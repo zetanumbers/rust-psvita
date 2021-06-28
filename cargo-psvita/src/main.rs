@@ -104,7 +104,7 @@ fn build(opt: &Opt, metadata: &Metadata) -> Vec<Utf8PathBuf> {
             metadata.target_directory.join(target_config::NAME).as_str(),
         ])
         .args(&["-Z", "build-std=core"])
-        .args(&["--message-format", "json"])
+        .args(&["--message-format", "json-render-diagnostics"])
         .args(&opt.features)
         .args(opt.all_features.then(|| "--all-features"))
         .args(opt.no_default_features.then(|| "--no-default-features"))
