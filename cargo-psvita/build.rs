@@ -31,7 +31,9 @@ fn main() {
 
     // Save
     {
-        let writer = BufWriter::new(fs::File::create(format!("{}.json", TARGET_NAME)).unwrap());
+        let writer = BufWriter::new(
+            fs::File::create(format!("src/target_config/{}.json", TARGET_NAME)).unwrap(),
+        );
         serde_json::to_writer(writer, &target_json).unwrap();
     }
 }
