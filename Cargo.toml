@@ -1,2 +1,3 @@
 [workspace]
-members = ["cargo-psvita", "examples/minimal"]
+members = ["cargo-psvita", "psvita-linker", "psvita-linker/ld-compat-opts"]
+exclude = ["examples"]

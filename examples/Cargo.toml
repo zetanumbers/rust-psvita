@@ -1,0 +1,2 @@
+[workspace]
+members = ["dylib", "minimal", "dynamic_linking"]

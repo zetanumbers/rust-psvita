@@ -1,0 +1,9 @@
+[package]
+name = "ld-compat-opts"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+displaydoc = "0.2.2"
+thiserror = "1.0.26"
+remain = "0.2.2"
