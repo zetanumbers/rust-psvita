@@ -1,44 +1,67 @@
-use displaydoc::Display;
+//! Long options parsing in constant time.
+
 use std::{
     collections::{hash_map, HashMap},
+    fmt,
     iter::Peekable,
 };
 use thiserror::Error;
 
-#[derive(Debug, Default)]
+/// Long option descriptions container.
+#[derive(Default)]
 pub struct Longs<A> {
-    inner: HashMap<&'static str, fn(String) -> A>,
+    inner: HashMap<&'static str, Box<dyn Fn(String) -> A>>,
 }
 
-#[derive(Display, Error, Debug)]
-/// failed to insert `{name}` option, which already exists
+impl<A> fmt::Debug for Longs<A> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_set().entries(self.inner.keys()).finish()
+    }
+}
+
+/// An error which can be returned when trying to insert a duplicate long option.
+#[derive(Error, Debug)]
+#[error("failed to insert `{name}` option, which already exists")]
 pub struct DuplicateLongError {
     pub name: &'static str,
 }
 
 impl<A> Longs<A> {
+    /// Create empty long options container.
     pub fn new() -> Self {
         Self {
             inner: HashMap::new(),
         }
     }
 
-    pub fn try_insert(
+    /// Try to insert a long option, fails on a duplicate.
+    pub fn try_insert<F, S>(
         &mut self,
         name: &'static str,
-        parser: fn(String) -> A,
-    ) -> Result<(), DuplicateLongError> {
+        parser: F,
+    ) -> Result<(), DuplicateLongError>
+    where
+        F: Fn(S) -> A + 'static,
+        S: From<String>,
+    {
+        let parser = Box::new(move |s: String| parser(s.into()));
         match self.inner.entry(name) {
             hash_map::Entry::Vacant(e) => Ok(drop(e.insert(parser))),
             hash_map::Entry::Occupied(_) => Err(DuplicateLongError { name }),
         }
     }
 
-    pub fn insert(&mut self, name: &'static str, parser: fn(String) -> A) {
+    /// Same as [`Longs::try_insert`] but panics instead.
+    pub fn insert<F, S>(&mut self, name: &'static str, parser: F)
+    where
+        F: Fn(S) -> A + 'static,
+        S: From<String>,
+    {
         self.try_insert(name, parser)
             .expect("error while inserting long option")
     }
 
+    /// Match the argument as one of the long options, consume arguments on success.
     pub fn parse_argument<I>(&self, args: &mut Peekable<I>) -> Option<A>
     where
         I: Iterator<Item = String>,

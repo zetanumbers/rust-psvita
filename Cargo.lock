@@ -86,14 +86,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "displaydoc"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bf95dc3f046b9da4f2d51833c0d3547d8564ef6910f5c1ed130306a75b92886"
+name = "compat-args"
+version = "0.1.0"
 dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+ "thiserror",
 ]
 
 [[package]]
@@ -130,7 +126,7 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 name = "ld-compat-opts"
 version = "0.1.0"
 dependencies = [
- "displaydoc",
+ "compat-args",
  "remain",
  "thiserror",
 ]
