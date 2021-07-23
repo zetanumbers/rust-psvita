@@ -3,6 +3,7 @@ members = [
     "cargo-psvita",
     "psvita-linker",
     "psvita-linker/ld-compat-args",
+    "psvita-linker/ld-version-script",
     "psvita-linker/compat-args",
 ]
 exclude = ["examples"]

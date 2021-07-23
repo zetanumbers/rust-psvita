@@ -5,3 +5,5 @@ edition = "2018"
 
 [dependencies]
 ld-compat-args = { path = "ld-compat-args" }
+ld-version-script = { path = "ld-version-script" }
+once_cell = "1.8.0"
