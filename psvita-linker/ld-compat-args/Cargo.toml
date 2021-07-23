@@ -1,9 +1,9 @@
 [package]
-name = "ld-compat-opts"
+name = "ld-compat-args"
 version = "0.1.0"
 edition = "2018"
 
 [dependencies]
 thiserror = "1.0.26"
 remain = "0.2.2"
-compat-args = { path = "compat-args" }
+compat-args = { path = "../compat-args" }

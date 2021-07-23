@@ -95,7 +95,6 @@ pub fn args() -> compat_args::Args<self::Argument> {
     flags.insert("--eh-frame-hdr", || EhFrameHdr);
 
     flags.insert("--gc-sections", || GcSections(true));
-
     flags.insert("--no-gc-sections", || GcSections(false));
 
     let handler = || PicExecutable;
