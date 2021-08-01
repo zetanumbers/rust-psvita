@@ -6,4 +6,3 @@ edition = "2018"
 [dependencies]
 logos = "0.12.0"
 logos-derive = "0.12.0"
-globset = "0.4.8"

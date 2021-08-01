@@ -1,7 +1,13 @@
-use globset::Glob;
 use logos::{Lexer, Logos, Span};
-use std::{error, fmt};
+use std::{
+    collections::hash_map,
+    env, error, fmt, fs,
+    hash::{Hash, Hasher},
+};
 use ParseTrivialVersionScriptErrorKind::*;
+
+mod glob_pattern;
+pub use glob_pattern::*;
 
 #[derive(Logos, Debug, Clone, Copy, PartialEq)]
 pub enum Token {
@@ -33,21 +39,70 @@ pub enum Token {
 
 #[derive(Default)]
 pub struct TrivialVersionScript {
-    pub global: Vec<globset::Glob>,
-    pub local: Vec<globset::Glob>,
+    pub global: Vec<GlobPattern>,
+    pub local: Vec<GlobPattern>,
+}
+
+impl TrivialVersionScript {
+    pub fn pretty_parse(text: &str) -> TrivialVersionScript {
+        text.parse()
+            .unwrap_or_else(|error: ParseTrivialVersionScriptError| {
+                let hash = {
+                    let mut s = hash_map::DefaultHasher::new();
+                    text.hash(&mut s);
+                    s.finish()
+                };
+                let copy_path =
+                    env::temp_dir().join(format!("{:16x}-psvita-linker.version-script", hash));
+                let dump = fs::write(&copy_path, &text).map(move |()| copy_path);
+
+                let dump_msg = match &dump {
+                    Ok(path) => {
+                        fn find_end(text: &str) -> (usize, usize) {
+                            let mut lines = text.lines();
+                            let cur_line = lines.next_back().unwrap();
+                            let row = lines.count();
+                            let col = cur_line.chars().count();
+                            (row + 1, col + 1)
+                        }
+                        match &error.got {
+                            Some((_, r)) => {
+                                let r = find_end(&text[..r.start])..find_end(&text[..r.end]);
+                                format!(
+                                    "dumped error at `{}:{}:{}` (ending at `:{}:{}`)",
+                                    path.to_str().unwrap(),
+                                    r.start.0,
+                                    r.start.1,
+                                    r.end.0,
+                                    r.end.1,
+                                )
+                            }
+                            None => {
+                                format!("dumped error at {}", path.to_str().unwrap(),)
+                            }
+                        }
+                    }
+                    Err(e) => format!("error while dumping script: {}", e),
+                };
+                panic!(
+                    "error while parsing version script ({}): {};",
+                    dump_msg, error
+                )
+            })
+    }
 }
 
 impl fmt::Debug for TrivialVersionScript {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        struct DisplayVec<'a>(&'a Vec<globset::Glob>);
+        struct DisplayVec<'a, T>(&'a Vec<T>);
 
-        impl fmt::Debug for DisplayVec<'_> {
+        impl<T: fmt::Debug> fmt::Debug for DisplayVec<'_, T> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 const LIMIT_N: usize = 50;
                 let n = self.0.len();
 
                 let mut debug_list = f.debug_list();
-                debug_list.entries(self.0.iter().map(|g| g.glob()).take(LIMIT_N));
+                debug_list.entries(self.0.iter().take(LIMIT_N));
                 if n > LIMIT_N {
                     debug_list.entry(&format_args!("< + {} more entries >", n - LIMIT_N));
                 }
@@ -104,7 +159,7 @@ fn parse_glob_pattern(
     token: Token,
     span: Span,
     slice: &str,
-) -> Result<Glob, ParseTrivialVersionScriptError> {
+) -> Result<GlobPattern, ParseTrivialVersionScriptError> {
     if token != Token::GlobPattern {
         return Err(ParseTrivialVersionScriptError {
             got: Some((token, span)),
@@ -199,5 +254,5 @@ pub enum ParseTrivialVersionScriptErrorKind {
     WrongToken,
     UnexpectedEnd,
     ExpectedEnd,
-    GlobError(globset::Error),
+    GlobError(ParseGlobPatternError),
 }
