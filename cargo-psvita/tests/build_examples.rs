@@ -16,11 +16,21 @@ fn build(package: &Path) {
 
     let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
 
+    {
+        let dir = dbg!(workspace.join("examples"));
+        let status = cargo_command()
+            .arg("clean")
+            .current_dir(dir)
+            .status()
+            .unwrap();
+        assert!(status.success());
+    }
+
     let linker_dir = workspace.join("target").join("debug");
     {
         let mut cmd = cargo_command();
         cmd.args(&["build", "-ppsvita-linker"]);
-        println!("{:?}", cmd);
+        eprintln!("{:?}", cmd);
         let status = cmd.status().unwrap();
         assert!(status.success());
     }
@@ -38,6 +48,7 @@ fn build(package: &Path) {
         .arg(workspace.join(package).join("Cargo.toml").to_str().unwrap())
         .arg("-v")
         .env("PATH", path)
+        .env("RUSTC_LOG", "rustc_codegen_ssa::back::link=trace")
         .status()
         .unwrap();
 

@@ -3,7 +3,7 @@
 
 #[no_mangle]
 pub unsafe extern "C" fn _start(_args: i32, _argp: *const u8) -> ! {
-    loop {}
+    while psvita_dylib_example::foo() {}
 }
 
 #[panic_handler]
