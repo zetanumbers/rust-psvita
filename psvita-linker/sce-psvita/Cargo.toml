@@ -1,0 +1,7 @@
+[package]
+name = "sce-psvita"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+sha-1 = "0.9.7"
