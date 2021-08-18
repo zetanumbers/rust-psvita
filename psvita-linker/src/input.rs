@@ -4,7 +4,7 @@ use once_cell::unsync::OnceCell;
 use std::{env, fs, path::PathBuf};
 
 #[derive(Debug)]
-pub struct LdInput {
+pub struct Input {
     pub input_files: Vec<InputFile>,
     pub library_paths: Vec<PathBuf>,
     pub libraries: Vec<InputLibrary>,
@@ -39,7 +39,7 @@ pub struct InputLibrary {
     pub whole_archive: bool,
 }
 
-impl LdInput {
+impl Input {
     pub fn from_args() -> Self {
         let args = ld_compat_args::args();
         let args = args.map_iter(env::args().skip(1));
@@ -102,7 +102,7 @@ impl LdInput {
             .into_inner()
             .unwrap_or_else(|| PathBuf::from("a.out"));
 
-        LdInput {
+        Input {
             input_files,
             library_paths,
             libraries,

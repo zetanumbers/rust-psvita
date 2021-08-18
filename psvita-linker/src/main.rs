@@ -1,7 +1,7 @@
-use psvita_linker::LdInput;
+use psvita_linker::input::Input;
 
 fn main() {
-    let input = LdInput::from_args();
+    let input = Input::from_args();
     dbg!(input);
     todo!()
 }
