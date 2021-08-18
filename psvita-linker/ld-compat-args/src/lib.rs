@@ -23,14 +23,14 @@ pub enum Argument {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Library {
     Name(String),
-    File(PathBuf),
+    File(String),
 }
 
 impl From<String> for Library {
     fn from(mut val: String) -> Self {
         if val.starts_with(':') {
             val.replace_range(..1, "");
-            Library::File(val.into())
+            Library::File(val)
         } else {
             Library::Name(val)
         }
@@ -135,6 +135,6 @@ mod tests {
         let args: Vec<_> = super::args()
             .map_iter(input_args.iter().map(|&s| s.to_owned()))
             .collect();
-        println!("{:#?}", args);
+        eprintln!("{:#?}", args);
     }
 }
