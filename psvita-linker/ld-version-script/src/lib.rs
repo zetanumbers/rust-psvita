@@ -1,5 +1,7 @@
+use glob_set::GlobSet;
 use logos::{Lexer, Logos, Span};
 use std::{
+    borrow::Cow,
     collections::hash_map,
     env, error, fmt, fs,
     hash::{Hash, Hasher},
@@ -7,6 +9,7 @@ use std::{
 use ParseTrivialVersionScriptErrorKind::*;
 
 mod glob_pattern;
+mod glob_set;
 pub use glob_pattern::*;
 
 #[derive(Logos, Debug, Clone, Copy, PartialEq)]
@@ -37,13 +40,20 @@ pub enum Token {
     Error,
 }
 
-#[derive(Default)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct TrivialVersionScript {
-    pub global: Vec<GlobPattern>,
-    pub local: Vec<GlobPattern>,
+    pub global: GlobSet,
+    pub local: GlobSet,
 }
 
 impl TrivialVersionScript {
+    pub fn new() -> Self {
+        Self {
+            global: GlobSet::new(),
+            local: GlobSet::new(),
+        }
+    }
+
     pub fn pretty_parse(text: &str) -> TrivialVersionScript {
         text.parse()
             .unwrap_or_else(|error: ParseTrivialVersionScriptError| {
@@ -92,37 +102,12 @@ impl TrivialVersionScript {
     }
 }
 
-impl fmt::Debug for TrivialVersionScript {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        struct DisplayVec<'a, T>(&'a Vec<T>);
-
-        impl<T: fmt::Debug> fmt::Debug for DisplayVec<'_, T> {
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                const LIMIT_N: usize = 50;
-                let n = self.0.len();
-
-                let mut debug_list = f.debug_list();
-                debug_list.entries(self.0.iter().take(LIMIT_N));
-                if n > LIMIT_N {
-                    debug_list.entry(&format_args!("< + {} more entries >", n - LIMIT_N));
-                }
-                debug_list.finish()
-            }
-        }
-
-        f.debug_struct("TrivialVersionScript")
-            .field("global", &DisplayVec(&self.global))
-            .field("local", &DisplayVec(&self.local))
-            .finish()
-    }
-}
-
 impl std::str::FromStr for TrivialVersionScript {
     type Err = ParseTrivialVersionScriptError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut lex: Lexer<'_, Token> = Token::lexer(s);
-        let mut vs = TrivialVersionScript::default();
+        let mut vs = TrivialVersionScript::new();
 
         parse_token(&mut lex, &[Token::BraceOpen])?;
         parse_token(&mut lex, &[Token::Global])?;
@@ -133,8 +118,10 @@ impl std::str::FromStr for TrivialVersionScript {
             if tok == Token::Local {
                 break;
             }
-            vs.global
-                .push(parse_glob_pattern(tok, lex.span(), lex.slice())?);
+            vs.global.insert(
+                parse_glob_pattern(tok, lex.span(), lex.slice())?
+                    .map_prefix(|p| Cow::Owned(p.into_bytes())),
+            );
             parse_token(&mut lex, &[Token::SemiColon])?;
         }
         parse_token(&mut lex, &[Token::Colon])?;
@@ -144,8 +131,10 @@ impl std::str::FromStr for TrivialVersionScript {
             if tok == Token::BraceClose {
                 break;
             }
-            vs.local
-                .push(parse_glob_pattern(tok, lex.span(), lex.slice())?);
+            vs.local.insert(
+                parse_glob_pattern(tok, lex.span(), lex.slice())?
+                    .map_prefix(|p| Cow::Owned(p.into_bytes())),
+            );
             parse_token(&mut lex, &[Token::SemiColon])?;
         }
         parse_token(&mut lex, &[Token::SemiColon])?;
@@ -159,7 +148,7 @@ fn parse_glob_pattern(
     token: Token,
     span: Span,
     slice: &str,
-) -> Result<GlobPattern, ParseTrivialVersionScriptError> {
+) -> Result<GlobPattern<String>, ParseTrivialVersionScriptError> {
     if token != Token::GlobPattern {
         return Err(ParseTrivialVersionScriptError {
             got: Some((token, span)),
