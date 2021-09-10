@@ -49,6 +49,7 @@ fn build(package: &Path) {
         .arg("-v")
         .env("PATH", path)
         .env("RUSTC_LOG", "rustc_codegen_ssa::back::link=trace")
+        .env("PSVITA_LINKER_LOG", "debug")
         .status()
         .unwrap();
 
