@@ -5,6 +5,6 @@ members = [
     "psvita-linker/ld-compat-args",
     "psvita-linker/ld-version-script",
     "psvita-linker/compat-args",
-    "psvita-linker/sce-psvita",
+    "psvita_sce_types",
 ]
 exclude = ["examples"]
