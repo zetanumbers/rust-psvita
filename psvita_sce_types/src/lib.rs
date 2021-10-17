@@ -1,5 +1,3 @@
-use bitflags::bitflags;
-use bytemuck::{Pod, Zeroable};
 use core::convert::TryInto;
 use sha1::{Digest, Sha1};
 
@@ -11,6 +9,9 @@ pub fn generate_nid(name: &[u8]) -> Nid {
     let digest_tail: &[u8; 4] = digest[..4].try_into().unwrap();
     Nid::from_le_bytes(*digest_tail)
 }
+
+use bitflags::bitflags;
+use bytemuck::{Pod, Zeroable};
 
 pub const MODULE_NAME_MAX_LEN: usize = 27;
 
@@ -47,12 +48,33 @@ bitflags! {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+pub struct RawAttributes(u16);
+
+impl RawAttributes {
+    pub fn new(attrs: Attributes, privilege: PrivilegeLevel) -> Self {
+        RawAttributes(attrs.bits() | privilege.bits())
+    }
+
+    pub fn into_pair(self) -> Option<(Attributes, PrivilegeLevel)> {
+        if let 0 = self.0 & !(Attributes::all().bits() | PrivilegeLevel::all().bits()) {
+            return None;
+        }
+
+        Some((
+            Attributes::from_bits_truncate(self.0),
+            PrivilegeLevel::from_bits_truncate(self.0),
+        ))
+    }
+}
+
 /// Common beginning of `SceModuleInfo` structs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct Common {
     /// Attributes of the module
-    pub attributes: u16,
+    pub attributes: RawAttributes,
     /// Major version of the module (usually set to 1) followed by Minor version of the module (usually set to 1)
     pub module_version: [u8; 2],
     /// Name of the module. Null-terminated string.
@@ -191,6 +213,8 @@ pub struct V6 {
 #[test]
 fn type_assertions() {
     use core::mem::size_of;
+
+    assert_eq!(Attributes::all().bits() & PrivilegeLevel::all().bits(), 0);
     assert_eq!(size_of::<Common>(), 0x20);
     assert_eq!(size_of::<V0>(), 0x34);
     assert_eq!(size_of::<V1>(), 0x40);
