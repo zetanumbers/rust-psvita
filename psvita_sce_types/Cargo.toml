@@ -5,7 +5,7 @@ edition = "2018"
 
 [dependencies]
 sha-1 = "0.9.7"
+bytemuck = { version = "1.7.2", features = ["derive"] }
+endian_codec = "0.1.1"
 
-[dependencies.object]
-version = "0.26.2"
-default-features = false
+[features]
