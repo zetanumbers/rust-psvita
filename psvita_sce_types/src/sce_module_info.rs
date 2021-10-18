@@ -38,15 +38,15 @@ bitflags! {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct RawAttributes(u16);
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Zeroable, Pod)]
+pub struct RawAttributes(pub u16);
 
 impl RawAttributes {
     pub fn new(attrs: Attributes, privilege: PrivilegeLevel) -> Self {
         RawAttributes(attrs.bits() | privilege.bits())
     }
 
-    pub fn into_pair(self) -> Option<(Attributes, PrivilegeLevel)> {
+    pub fn try_into_pair(self) -> Option<(Attributes, PrivilegeLevel)> {
         if let 0 = self.0 & !(Attributes::all().bits() | PrivilegeLevel::all().bits()) {
             return None;
         }
