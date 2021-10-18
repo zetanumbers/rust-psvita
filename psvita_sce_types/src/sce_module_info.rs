@@ -98,15 +98,9 @@ pub struct DebugFingerprint {
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct Entries {
-    /// Offset to module_start function. To disable set it to:
-    /// - `-1` according to [Henkaku wiki](https://wiki.henkaku.xyz/vita/Modules#SceModuleInfo)
-    /// - `0` according to [vitasdk toolchain](https://github.com/vitasdk/vita-toolchain/blob/a075d3ab2963d6b12e1a51b6816022d4f0d2c41d/src/sce-elf-defs.h#L36)
-    /// TODO: test both
+    /// Offset to module_start function. To disable set it to `-1`
     pub start_entry: Address,
-    /// Offset to module_stop function. To disable set it to:
-    /// - `-1` according to [Henkaku wiki](https://wiki.henkaku.xyz/vita/Modules#SceModuleInfo)
-    /// - `0` according to [vitasdk toolchain](https://github.com/vitasdk/vita-toolchain/blob/a075d3ab2963d6b12e1a51b6816022d4f0d2c41d/src/sce-elf-defs.h#L37)
-    /// TODO: test both
+    /// Offset to module_stop function. To disable set it to `-1`
     pub stop_entry: Address,
 }
 
