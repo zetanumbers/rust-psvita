@@ -1,9 +1,10 @@
 use bytemuck::{Pod, Zeroable};
 
 pub mod nid;
+pub mod sce_library_entry_table;
 pub mod sce_module_info;
 
-#[repr(C)]
+#[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Zeroable, Pod)]
 pub struct Address(pub u32);
 
