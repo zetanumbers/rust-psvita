@@ -86,16 +86,12 @@ pub struct PublicApi {
 /// Global pointer value for MIPS, TOC address (address of .toc) for PowerPC, always 0 for ARM
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct GPValue {
-    pub inner: Address,
-}
+pub struct GPValue(pub Address);
 
 /// It was wrongly named module NID. It is a sort of hash to ensure integrity and versioning.
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct DebugFingerprint {
-    pub inner: u32,
-}
+pub struct DebugFingerprint(pub u32);
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
@@ -120,16 +116,12 @@ pub struct TlsInfo {
 /// Address range of ARM EXIDX (optional)
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct ArmExidx {
-    pub inner: AddressRange,
-}
+pub struct ArmExidx(pub AddressRange);
 
 /// Address range of ARM EXTAB (optional)
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct ArmExtab {
-    pub inner: AddressRange,
-}
+pub struct ArmExtab(pub AddressRange);
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
