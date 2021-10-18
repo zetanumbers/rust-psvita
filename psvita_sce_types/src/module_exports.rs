@@ -5,49 +5,49 @@ use bytemuck::{Pod, Zeroable};
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceLibraryEntryCommon {
     /// Size of the structure in bytes (usually 0x1C or 0x20)
-    size: u8,
+    pub size: u8,
     /// Unknown. Was added recently.
-    auxattribute: u8,
+    pub auxattribute: u8,
     /// Library version (usually 1)
-    version: u16,
+    pub version: u16,
     /// Library attribute flags
-    attribute: u16,
+    pub attribute: u16,
     /// Number of exported functions
-    nfunc: u16,
+    pub nfunc: u16,
     /// Number of exported variables
-    nvar: u16,
+    pub nvar: u16,
     /// Number of exported TLS variables
-    ntls: u16,
-    hashinfo: HashInfo,
-    reserved: u8,
+    pub ntls: u16,
+    pub hashinfo: HashInfo,
+    pub reserved: u8,
     /// Unknown. usually 0
-    nidaltsets: u8,
+    pub nidaltsets: u8,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceLibraryEntrySized1C {
-    common: SceLibraryEntryCommon,
+    pub common: SceLibraryEntryCommon,
     /// Pointer to library name. Set to 0 for NONAME.
-    libname: Address,
+    pub libname: Address,
     /// Pointer to array of NIDs of exports
-    nid_table: Address,
+    pub nid_table: Address,
     /// Pointer to array of pointers of exports
-    entry_table: Address,
+    pub entry_table: Address,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceLibraryEntrySized20 {
-    common: SceLibraryEntryCommon,
+    pub common: SceLibraryEntryCommon,
     /// Library NID
-    libname_nid: Nid,
+    pub libname_nid: Nid,
     /// Pointer to library name. Set to 0 for NONAME.
-    libname: Address,
+    pub libname: Address,
     /// Pointer to array of NIDs of exports
-    nid_table: Address,
+    pub nid_table: Address,
     /// Pointer to array of pointers of exports
-    entry_table: Address,
+    pub entry_table: Address,
 }
 
 #[repr(transparent)]
