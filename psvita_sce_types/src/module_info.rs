@@ -8,7 +8,7 @@ bitflags! {
     /// Module type attributes
     #[repr(transparent)]
     #[derive(Zeroable, Pod)]
-    pub struct Attributes: u16 {
+    pub struct SceModuleAttribute: u16 {
         const CANT_STOP = 0x0001;
         const EXCLUSIVE_LOAD = 0x0002;
         const EXCLUSIVE_START = 0x0004;
@@ -17,7 +17,7 @@ bitflags! {
     /// Module Privilege Levels - These levels define the permissions a module can have.
     #[repr(transparent)]
     #[derive(Zeroable, Pod)]
-    pub struct PrivilegeLevel: u16 {
+    pub struct SceModulePrivilegeLevel: u16 {
         /// Lowest permission
         const USER                 = 0x0000;
         /// MS modeul. POPS/Demo.
@@ -42,18 +42,20 @@ bitflags! {
 pub struct RawAttributes(pub u16);
 
 impl RawAttributes {
-    pub fn new(attrs: Attributes, privilege: PrivilegeLevel) -> Self {
+    pub fn new(attrs: SceModuleAttribute, privilege: SceModulePrivilegeLevel) -> Self {
         RawAttributes(attrs.bits() | privilege.bits())
     }
 
-    pub fn try_into_pair(self) -> Option<(Attributes, PrivilegeLevel)> {
-        if let 0 = self.0 & !(Attributes::all().bits() | PrivilegeLevel::all().bits()) {
+    pub fn try_into_pair(self) -> Option<(SceModuleAttribute, SceModulePrivilegeLevel)> {
+        if let 0 =
+            self.0 & !(SceModuleAttribute::all().bits() | SceModulePrivilegeLevel::all().bits())
+        {
             return None;
         }
 
         Some((
-            Attributes::from_bits_truncate(self.0),
-            PrivilegeLevel::from_bits_truncate(self.0),
+            SceModuleAttribute::from_bits_truncate(self.0),
+            SceModulePrivilegeLevel::from_bits_truncate(self.0),
         ))
     }
 }
@@ -61,8 +63,8 @@ impl RawAttributes {
 /// Common beginning of `SceModuleInfo` structs.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct Common {
-    /// Attributes of the module
+pub struct SceModuleInfoCommon {
+    /// SceModuleAttribute of the module
     pub attributes: RawAttributes,
     /// Major version of the module (usually set to 1) followed by Minor version of the module (usually set to 1)
     pub module_version: [u8; 2],
@@ -131,16 +133,16 @@ pub struct ArmExtab {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct V0 {
-    pub common: Common,
+pub struct SceModuleInfoV0 {
+    pub common: SceModuleInfoCommon,
     pub gp_value: GPValue,
     pub public_api: PublicApi,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct V1 {
-    pub common: Common,
+pub struct SceModuleInfoV1 {
+    pub common: SceModuleInfoCommon,
     pub gp_value: GPValue,
     pub public_api: PublicApi,
     pub debug_fingerprint: DebugFingerprint,
@@ -149,8 +151,8 @@ pub struct V1 {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct V2 {
-    pub common: Common,
+pub struct SceModuleInfoV2 {
+    pub common: SceModuleInfoCommon,
     pub gp_value: GPValue,
     pub public_api: PublicApi,
     pub debug_fingerprint: DebugFingerprint,
@@ -160,8 +162,8 @@ pub struct V2 {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct V3 {
-    pub common: Common,
+pub struct SceModuleInfoV3 {
+    pub common: SceModuleInfoCommon,
     pub gp_value: GPValue,
     pub public_api: PublicApi,
     pub debug_fingerprint: DebugFingerprint,
@@ -172,8 +174,8 @@ pub struct V3 {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct V6 {
-    pub common: Common,
+pub struct SceModuleInfoV6 {
+    pub common: SceModuleInfoCommon,
     pub gp_value: GPValue,
     pub public_api: PublicApi,
     pub debug_fingerprint: DebugFingerprint,
@@ -188,11 +190,14 @@ pub struct V6 {
 fn type_assertions() {
     use core::mem::size_of;
 
-    assert_eq!(Attributes::all().bits() & PrivilegeLevel::all().bits(), 0);
-    assert_eq!(size_of::<Common>(), 0x20);
-    assert_eq!(size_of::<V0>(), 0x34);
-    assert_eq!(size_of::<V1>(), 0x40);
-    assert_eq!(size_of::<V2>(), 0x48);
-    assert_eq!(size_of::<V3>(), 0x54);
-    assert_eq!(size_of::<V6>(), 0x5C);
+    assert_eq!(
+        SceModuleAttribute::all().bits() & SceModulePrivilegeLevel::all().bits(),
+        0
+    );
+    assert_eq!(size_of::<SceModuleInfoCommon>(), 0x20);
+    assert_eq!(size_of::<SceModuleInfoV0>(), 0x34);
+    assert_eq!(size_of::<SceModuleInfoV1>(), 0x40);
+    assert_eq!(size_of::<SceModuleInfoV2>(), 0x48);
+    assert_eq!(size_of::<SceModuleInfoV3>(), 0x54);
+    assert_eq!(size_of::<SceModuleInfoV6>(), 0x5C);
 }

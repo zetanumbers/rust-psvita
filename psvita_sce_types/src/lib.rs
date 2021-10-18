@@ -1,8 +1,8 @@
 use bytemuck::{Pod, Zeroable};
 
+pub mod module_exports;
+pub mod module_info;
 pub mod nid;
-pub mod sce_library_entry_table;
-pub mod sce_module_info;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Zeroable, Pod)]

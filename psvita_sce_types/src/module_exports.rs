@@ -3,7 +3,7 @@ use bytemuck::{Pod, Zeroable};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct Common {
+pub struct SceLibraryEntryCommon {
     /// Size of the structure in bytes (usually 0x1C or 0x20)
     size: u8,
     /// Unknown. Was added recently.
@@ -26,8 +26,8 @@ pub struct Common {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct Sized1C {
-    common: Common,
+pub struct SceLibraryEntrySized1C {
+    common: SceLibraryEntryCommon,
     /// Pointer to library name. Set to 0 for NONAME.
     libname: Address,
     /// Pointer to array of NIDs of exports
@@ -38,8 +38,8 @@ pub struct Sized1C {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct Sized20 {
-    common: Common,
+pub struct SceLibraryEntrySized20 {
+    common: SceLibraryEntryCommon,
     /// Library NID
     libname_nid: Nid,
     /// Pointer to library name. Set to 0 for NONAME.
@@ -81,7 +81,7 @@ impl HashInfo {
 fn type_assertions() {
     use core::mem::size_of;
 
-    assert_eq!(size_of::<Common>(), 0x10);
-    assert_eq!(size_of::<Sized1C>(), 0x1C);
-    assert_eq!(size_of::<Sized20>(), 0x20);
+    assert_eq!(size_of::<SceLibraryEntryCommon>(), 0x10);
+    assert_eq!(size_of::<SceLibraryEntrySized1C>(), 0x1C);
+    assert_eq!(size_of::<SceLibraryEntrySized20>(), 0x20);
 }
