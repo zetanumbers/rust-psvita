@@ -12,7 +12,7 @@ impl std::fmt::Debug for Nid {
 
 #[cfg(feature = "nid-generation")]
 impl Nid {
-    pub fn from_bytes(name: &[u8]) -> Nid {
+    pub fn generate(name: &[u8]) -> Nid {
         use core::convert::TryInto;
         use sha1::{Digest, Sha1};
 
@@ -22,23 +22,9 @@ impl Nid {
     }
 }
 
-#[cfg(test)]
-mod tests {
+pub mod noname {
     use super::Nid;
 
-    #[cfg(feature = "nid-generation")]
-    #[test]
-    fn henkaku_nid_example() {
-        assert_eq!(Nid(0xEEDA2E54), Nid::from_bytes(b"sceDisplayGetFrameBuf"));
-    }
-
-    #[test]
-    fn nid_debug_fmt() {
-        assert_eq!(format!("{:?}", Nid(0x000A2E54)), "Nid(0x000A2E54)");
-    }
-}
-
-impl Nid {
     /// Function 	int module_start(SceSize arglen, const void *argp);
     pub const MODULE_START: Nid = Nid(0x935CD196);
     /// Function 	int module_stop(SceSize arglen, const void *argp);
@@ -54,16 +40,38 @@ impl Nid {
     /// Variable 	int
     pub const MODULE_SDK_VERSION: Nid = Nid(0x936C8A78);
 
+    pub const NID_TABLE: [(&str, Nid); 7] = [
+        ("module_start", MODULE_START),
+        ("module_stop", MODULE_STOP),
+        ("module_exit", MODULE_EXIT),
+        ("module_bootstart", MODULE_BOOTSTART),
+        ("module_info", MODULE_INFO),
+        ("module_proc_param", MODULE_PROC_PARAM),
+        ("module_sdk_version", MODULE_SDK_VERSION),
+    ];
+
     pub fn try_get_predefined(name: &[u8]) -> Option<Nid> {
-        match name {
-            b"module_start" => Some(Nid::MODULE_START),
-            b"module_stop" => Some(Nid::MODULE_STOP),
-            b"module_exit" => Some(Nid::MODULE_EXIT),
-            b"module_bootstart" => Some(Nid::MODULE_BOOTSTART),
-            b"module_info" => Some(Nid::MODULE_INFO),
-            b"module_proc_param" => Some(Nid::MODULE_PROC_PARAM),
-            b"module_sdk_version" => Some(Nid::MODULE_SDK_VERSION),
-            _ => None,
+        for (table_name, nid) in &NID_TABLE {
+            if table_name.as_bytes() == name {
+                return Some(*nid);
+            }
         }
+        None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn nid_debug_fmt() {
+        assert_eq!(format!("{:?}", Nid(0x000A2E54)), "Nid(0x000A2E54)");
+    }
+
+    #[cfg(feature = "nid-generation")]
+    #[test]
+    fn henkaku_nid_example() {
+        assert_eq!(Nid(0xEEDA2E54), Nid::generate(b"sceDisplayGetFrameBuf"));
     }
 }
