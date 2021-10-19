@@ -16,3 +16,5 @@ pub struct AddressRange {
     /// Offset to bottom of address range
     pub bottom: Address,
 }
+
+pub type USize = u32;
