@@ -4,7 +4,7 @@ use std::os::raw::c_char;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct SceLibraryEntryCommon {
+pub struct SceModuleExportCommon {
     /// Size of the structure in bytes (usually 0x1C or 0x20)
     pub size: u8,
     /// Unknown. Was added recently.
@@ -28,8 +28,8 @@ pub struct SceLibraryEntryCommon {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct SceLibraryEntrySized1C {
-    pub common: SceLibraryEntryCommon,
+pub struct SceModuleExportSized1C {
+    pub common: SceModuleExportCommon,
     /// Ptr to library name. Set to 0 for NONAME.
     pub libname: Ptr<c_char>,
     /// Ptr to array of NIDs of exports
@@ -40,8 +40,8 @@ pub struct SceLibraryEntrySized1C {
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct SceLibraryEntrySized20 {
-    pub common: SceLibraryEntryCommon,
+pub struct SceModuleExportSized20 {
+    pub common: SceModuleExportCommon,
     /// Library NID
     pub libname_nid: Nid,
     /// Ptr to library name. Set to 0 for NONAME.
@@ -52,7 +52,7 @@ pub struct SceLibraryEntrySized20 {
     pub entry_table: Ptr<Address>,
 }
 
-pub type SceLibraryEntry = SceLibraryEntrySized20;
+pub type SceModuleExport = SceModuleExportSized20;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
@@ -241,9 +241,9 @@ pub struct MallocForTlsReplace {
 fn type_assertions() {
     use core::mem::size_of;
 
-    assert_eq!(size_of::<SceLibraryEntryCommon>(), 0x10);
-    assert_eq!(size_of::<SceLibraryEntrySized1C>(), 0x1C);
-    assert_eq!(size_of::<SceLibraryEntrySized20>(), 0x20);
+    assert_eq!(size_of::<SceModuleExportCommon>(), 0x10);
+    assert_eq!(size_of::<SceModuleExportSized1C>(), 0x1C);
+    assert_eq!(size_of::<SceModuleExportSized20>(), 0x20);
     assert_eq!(size_of::<SceModuleEntryThread>(), 0x10);
     assert_eq!(size_of::<SceProcessParam>(), 0x34);
     assert_eq!(size_of::<SceLibcParam>(), 0x38);

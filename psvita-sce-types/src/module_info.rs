@@ -1,5 +1,5 @@
 use crate::{
-    module_exports::SceLibraryEntry, module_imports::SceModuleImport, Address, AddressRange,
+    module_exports::SceModuleExport, module_imports::SceModuleImport, Address, AddressRange,
     PtrRange, USize,
 };
 use bitflags::bitflags;
@@ -81,7 +81,7 @@ pub struct SceModuleInfoCommon {
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct PublicApi {
     /// Exports array
-    pub exports: PtrRange<SceLibraryEntry>,
+    pub exports: PtrRange<SceModuleExport>,
     /// Imports array
     pub imports: PtrRange<SceModuleImport>,
 }
