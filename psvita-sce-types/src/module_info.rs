@@ -1,4 +1,4 @@
-use crate::{Address, AddressRange};
+use crate::{module_exports::SceLibraryEntry, Address, AddressRange, PtrRange, USize};
 use bitflags::bitflags;
 use bytemuck::{Pod, Zeroable};
 
@@ -78,9 +78,10 @@ pub struct SceModuleInfoCommon {
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct PublicApi {
     /// Exports array
-    pub exports: AddressRange,
+    pub exports: PtrRange<SceLibraryEntry>,
     /// Imports array
-    pub imports: AddressRange,
+    /// TODO: fix
+    pub imports: PtrRange<()>,
 }
 
 /// Global pointer value for MIPS, TOC address (address of .toc) for PowerPC, always 0 for ARM
@@ -108,9 +109,9 @@ pub struct TlsInfo {
     /// Offset to start of TLS (Thread Local Storage)
     pub tls_start: Address,
     /// Certainly equals (tls_end - tls_start)
-    pub tls_filesz: Address,
+    pub tls_filesz: USize,
     /// Certainly equals (tls_initialized_data_end - tls_start)
-    pub tls_memsz: Address,
+    pub tls_memsz: USize,
 }
 
 /// Address range of ARM EXIDX (optional)
@@ -176,6 +177,8 @@ pub struct SceModuleInfoV6 {
     pub arm_exidx: ArmExidx,
     pub arm_extab: ArmExtab,
 }
+
+pub type SceModuleInfo = SceModuleInfoV6;
 
 #[cfg(test)]
 #[test]

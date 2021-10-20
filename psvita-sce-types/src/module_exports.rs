@@ -1,5 +1,6 @@
-use crate::{nid::Nid, Address, USize};
+use crate::{nid::Nid, Address, Ptr, USize};
 use bytemuck::{Pod, Zeroable};
+use std::os::raw::c_char;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
@@ -28,12 +29,12 @@ pub struct SceLibraryEntryCommon {
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceLibraryEntrySized1C {
     pub common: SceLibraryEntryCommon,
-    /// Pointer to library name. Set to 0 for NONAME.
-    pub libname: Address,
-    /// Pointer to array of NIDs of exports
-    pub nid_table: Address,
-    /// Pointer to array of pointers of exports
-    pub entry_table: Address,
+    /// Ptr to library name. Set to 0 for NONAME.
+    pub libname: Ptr<c_char>,
+    /// Ptr to array of NIDs of exports
+    pub nid_table: Ptr<Nid>,
+    /// Ptr to array of pointers of exports
+    pub entry_table: Ptr<Address>,
 }
 
 #[repr(C)]
@@ -42,13 +43,15 @@ pub struct SceLibraryEntrySized20 {
     pub common: SceLibraryEntryCommon,
     /// Library NID
     pub libname_nid: Nid,
-    /// Pointer to library name. Set to 0 for NONAME.
-    pub libname: Address,
-    /// Pointer to array of NIDs of exports
-    pub nid_table: Address,
-    /// Pointer to array of pointers of exports
-    pub entry_table: Address,
+    /// Ptr to library name. Set to 0 for NONAME.
+    pub libname: Ptr<c_char>,
+    /// Ptr to array of NIDs of exports
+    pub nid_table: Ptr<Nid>,
+    /// Ptr to array of pointers of exports
+    pub entry_table: Ptr<Address>,
 }
+
+pub type SceLibraryEntry = SceLibraryEntrySized20;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
@@ -90,47 +93,146 @@ pub struct SceModuleEntryThread {
     pub attr: u32,
 }
 
-/// Size is 0x20 on FW 0.895, 0x30 on FW ??
+/// Henkaku wiki says:
+/// > Size is 0x20 on FW 0.895, 0x30 on FW ??
+///
+/// But this struct definition relies upon [vitasdk toolchain's code](https://github.com/vitasdk/vita-toolchain/blob/a075d3ab2963d6b12e1a51b6816022d4f0d2c41d/src/sce-elf-defs.h#L97-L111)
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceProcessParam {
-    /// Size of this struct
+    /// Size of this struct `0x34`
     pub size: USize,
     /// "PSP2"
     pub magic: u32,
-    /// ex: 1, 5, maybe version
+    /// ex: could be 6 but also 1 and 5
     pub ver: u32,
+    /// SDK version
     /// ex: 0x00895000 for FW 0.895
     pub fw_ver: u32,
     /// ex: "main_thread"
-    pub sce_user_main_thread_name: Address,
+    pub user_main_thread_name: Ptr<c_char>,
     /// ex: 0x20, 0xA0, 0x10000100
-    pub sce_user_main_thread_priority: i32,
+    pub user_main_thread_priority: i32,
     /// ex: 256 * 1024, 1024 * 1024
-    pub sce_user_main_thread_stack_size: u32,
-    pub sce_user_main_thread_attribute: u32,
-    pub sce_process_name: Address,
-    pub sce_process_preload_disabled: u32,
-    pub sce_user_main_thread_cpu_affinity_mask: u32,
-    /// points to the SceLibcParam
-    pub sce_libcparam: Address,
+    pub user_main_thread_stack_size: u32,
+    /// Unknown
+    pub user_main_thread_attribute: u32,
+    /// Process name pointer
+    pub process_name: Ptr<c_char>,
+    /// Module load inhibit
+    pub process_preload_disabled: u32,
+    /// Unknown
+    pub user_main_thread_cpu_affinity_mask: u32,
+    pub sce_libc_param: Ptr<SceLibcParam>,
+    pub unknown: u32,
 }
 
-/// Size is about 0x28
+/// vitasdk toolchain's code [has additional field with description](https://github.com/vitasdk/vita-toolchain/blob/a075d3ab2963d6b12e1a51b6816022d4f0d2c41d/src/sce-elf-defs.h#L167):
+/// > default SceLibc heap size - 0x40000 (256KiB)
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceLibcParam {
-    /// Size of this structure
-    pub size: USize,
-    pub unk_4: u32,
-    pub sce_libc_heap_size: USize,
-    pub sce_libc_heap_size_default: USize,
-    pub sce_libc_heap_extended_alloc: u32,
-    pub sce_libc_heap_delayed_alloc: u32,
-    pub unk_18: u32,
+    /// 0x38
+    pub size: u32,
+    /// Unknown
+    pub unk_04: u32,
+    /// Heap size variable
+    pub heap_size: Ptr<u32>,
+    /// Default heap size variable
+    pub default_heap_size: Ptr<u32>,
+    /// Dynamically extend heap size
+    pub heap_extended_alloc: Ptr<u32>,
+    /// Allocate heap on first call to malloc
+    pub heap_delayed_alloc: Ptr<u32>,
+    /// SDK version
+    pub fw_version: u32,
+    /// Unknown, set to 9
     pub unk_1c: u32,
-    pub __sce_libcmallocreplace: Address,
-    pub __sce_libcnewreplace: Address,
+    /// malloc replacement functions
+    pub malloc_replace: Ptr<()>,
+    /// new replacement functions
+    pub new_replace: Ptr<()>,
+    /// Dynamically allocated heap initial size
+    pub heap_initial_size: Ptr<u32>,
+    /// Change alloc unit size from 64k to 1M
+    pub heap_unit_1mb: Ptr<u32>,
+    /// Detect heap buffer overruns
+    pub heap_detect_overrun: Ptr<u32>,
+    /// malloc_for_tls replacement functions
+    pub malloc_for_tls_replace: Ptr<()>,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+pub struct MallocReplace {
+    /// 0x34
+    pub size: u32,
+    /// Unknown, set to 1
+    pub unk_0x4: u32,
+    /// Initialize malloc heap
+    pub malloc_init: Address,
+    /// Terminate malloc heap
+    pub malloc_term: Address,
+    /// malloc replacement
+    pub malloc: Address,
+    /// free replacement
+    pub free: Address,
+    /// calloc replacement
+    pub calloc: Address,
+    /// realloc replacement
+    pub realloc: Address,
+    /// memalign replacement
+    pub memalign: Address,
+    /// reallocalign replacement
+    pub reallocalign: Address,
+    /// malloc_stats replacement
+    pub malloc_stats: Address,
+    /// malloc_stats_fast replacement
+    pub malloc_stats_fast: Address,
+    /// malloc_usable_size replacement
+    pub malloc_usable_size: Address,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+pub struct OperatorNewReplace {
+    /// 0x28
+    pub size: u32,
+    /// Unknown, set to 1
+    pub unk_0x4: u32,
+    /// new operator replacement
+    pub operator_new: Address,
+    /// new (nothrow) operator replacement
+    pub operator_new_nothrow: Address,
+    /// new[] operator replacement
+    pub operator_new_arr: Address,
+    /// new[] (nothrow) operator replacement
+    pub operator_new_arr_nothrow: Address,
+    /// delete operator replacement
+    pub operator_delete: Address,
+    /// delete (nothrow) operator replacement
+    pub operator_delete_nothrow: Address,
+    /// delete[] operator replacement
+    pub operator_delete_arr: Address,
+    /// delete[] (nothrow) operator replacement
+    pub operator_delete_arr_nothrow: Address,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+pub struct MallocForTlsReplace {
+    /// 0x18
+    pub size: u32,
+    /// Unknown, set to 1
+    pub unk_0x4: u32,
+    /// Initialise tls malloc heap
+    pub malloc_init_for_tls: Address,
+    /// Terminate tls malloc heap
+    pub malloc_term_for_tls: Address,
+    /// malloc_for_tls replacement
+    pub malloc_for_tls: Address,
+    /// free_for_tls replacement
+    pub free_for_tls: Address,
 }
 
 #[cfg(test)]
@@ -142,6 +244,9 @@ fn type_assertions() {
     assert_eq!(size_of::<SceLibraryEntrySized1C>(), 0x1C);
     assert_eq!(size_of::<SceLibraryEntrySized20>(), 0x20);
     assert_eq!(size_of::<SceModuleEntryThread>(), 0x10);
-    assert_eq!(size_of::<SceProcessParam>(), 0x30);
-    assert_eq!(size_of::<SceLibcParam>(), 0x28);
+    assert_eq!(size_of::<SceProcessParam>(), 0x34);
+    assert_eq!(size_of::<SceLibcParam>(), 0x38);
+    assert_eq!(size_of::<MallocReplace>(), 0x34);
+    assert_eq!(size_of::<OperatorNewReplace>(), 0x28);
+    assert_eq!(size_of::<MallocForTlsReplace>(), 0x18);
 }
