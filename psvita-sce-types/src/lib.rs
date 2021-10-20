@@ -1,3 +1,5 @@
+use core::marker::PhantomData;
+
 use bytemuck::{Pod, Zeroable};
 
 pub mod module_exports;
@@ -8,7 +10,13 @@ pub type USize = u32;
 
 #[repr(transparent)]
 #[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Ptr<T: 'static>(pub USize, pub core::marker::PhantomData<T>);
+pub struct Ptr<T: 'static>(pub USize, pub PhantomData<T>);
+
+impl<T: 'static> Ptr<T> {
+    pub fn new(value: USize) -> Ptr<T> {
+        Ptr(value, PhantomData)
+    }
+}
 
 impl<T: 'static> std::fmt::Debug for Ptr<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
