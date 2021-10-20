@@ -149,9 +149,9 @@ pub struct SceLibcParam {
     /// Unknown, set to 9
     pub unk_1c: u32,
     /// malloc replacement functions
-    pub malloc_replace: Ptr<()>,
+    pub malloc_replace: Ptr<MallocReplace>,
     /// new replacement functions
-    pub new_replace: Ptr<()>,
+    pub operator_new_replace: Ptr<OperatorNewReplace>,
     /// Dynamically allocated heap initial size
     pub heap_initial_size: Ptr<u32>,
     /// Change alloc unit size from 64k to 1M
@@ -159,7 +159,7 @@ pub struct SceLibcParam {
     /// Detect heap buffer overruns
     pub heap_detect_overrun: Ptr<u32>,
     /// malloc_for_tls replacement functions
-    pub malloc_for_tls_replace: Ptr<()>,
+    pub malloc_for_tls_replace: Ptr<MallocForTlsReplace>,
 }
 
 #[repr(C)]
