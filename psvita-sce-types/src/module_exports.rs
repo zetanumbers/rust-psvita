@@ -12,6 +12,7 @@ pub struct SceLibraryEntryCommon {
     /// Library version (usually 1)
     pub version: u16,
     /// Library attribute flags
+    /// [`crate::SceLibraryAttribute`]
     pub attribute: u16,
     /// Number of exported functions
     pub nfunc: u16,

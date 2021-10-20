@@ -1,4 +1,7 @@
-use crate::{module_exports::SceLibraryEntry, Address, AddressRange, PtrRange, USize};
+use crate::{
+    module_exports::SceLibraryEntry, module_imports::SceModuleImport, Address, AddressRange,
+    PtrRange, USize,
+};
 use bitflags::bitflags;
 use bytemuck::{Pod, Zeroable};
 
@@ -80,8 +83,7 @@ pub struct PublicApi {
     /// Exports array
     pub exports: PtrRange<SceLibraryEntry>,
     /// Imports array
-    /// TODO: fix
-    pub imports: PtrRange<()>,
+    pub imports: PtrRange<SceModuleImport>,
 }
 
 /// Global pointer value for MIPS, TOC address (address of .toc) for PowerPC, always 0 for ARM
