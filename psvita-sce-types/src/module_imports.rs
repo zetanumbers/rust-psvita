@@ -1,6 +1,5 @@
 use crate::{Ptr, USize};
 use bytemuck::{Pod, Zeroable};
-use hex_literal::hex;
 use std::os::raw::c_char;
 
 #[repr(C)]
@@ -69,7 +68,7 @@ pub type SceModuleImport = SceModuleImportSized34;
 #[repr(transparent)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct FunctionStubPlaceholder {
-    pub text: [u8; 16],
+    pub text: [u32; 4],
 }
 
 impl Default for FunctionStubPlaceholder {
@@ -84,13 +83,12 @@ impl FunctionStubPlaceholder {
     }
 
     pub const FUNCTION_STUB_PLACEHOLDER: Self = Self {
-        #[rustfmt::skip]
-        text: hex!("
-            e3e00000 // mvn r0, #0
-            e12fff1e // bx lr
-            e1a00000 // mov r0, r0
-            00000000 // ; padding
-        "),
+        text: [
+            0xe3e00000, // mvn r0, #0
+            0xe12fff1e, // bx lr
+            0xe1a00000, // mov r0, r0
+            0x00000000, // ; padding
+        ],
     };
 }
 
