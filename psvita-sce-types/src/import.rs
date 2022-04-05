@@ -1,9 +1,12 @@
 use crate::{Ptr, USize};
+use bitfield::bitfield;
 use bytemuck::{Pod, Zeroable};
+use core::fmt;
 use std::os::raw::c_char;
+use thiserror::Error;
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+#[derive(Copy, Clone, Debug)]
 pub struct SceModuleImportCommon {
     /// Size of this struct (usually 0x24, 0x2C or 0x34)
     pub size: u16,
@@ -20,6 +23,9 @@ pub struct SceModuleImportCommon {
     pub num_syms_tls_vars: u16,
 }
 
+unsafe impl Zeroable for SceModuleExportCommon {}
+unsafe impl Pod for SceModuleExportCommon {}
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Zeroable, Pod)]
 pub struct SceModuleImportSized24 {
@@ -35,11 +41,11 @@ pub struct SceModuleImportSized24 {
     /// Pointer to array of variable NIDs to import
     pub var_nid_table: Ptr<u32>,
     /// Pointer to array of data pointers to write to
-    pub var_entry_table: Ptr<Ptr<SceVariableRelocations>>,
+    pub var_entry_table: Ptr<Ptr<SceVarImportsHeader>>,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+#[derive(Copy, Clone, Debug)]
 pub struct SceModuleImportSized34 {
     pub common: SceModuleImportCommon,
     pub reserved: u32,
@@ -56,20 +62,26 @@ pub struct SceModuleImportSized34 {
     /// Pointer to array of variable NIDs to import
     pub var_nid_table: Ptr<u32>,
     /// Pointer to array of data pointers to write to
-    pub var_entry_table: Ptr<Ptr<SceVariableRelocations>>,
+    pub var_entry_table: Ptr<Ptr<SceVarImportsHeader>>,
     /// Pointer to array of TLS variable NIDs to import
     pub tls_var_nid_table: Ptr<u32>,
     /// Pointer to array of data pointers to write to
-    pub tls_var_entry_table: Ptr<Ptr<SceVariableRelocations>>,
+    pub tls_var_entry_table: Ptr<Ptr<SceVarImportsHeader>>,
 }
+
+unsafe impl Zeroable for SceModuleExportCommon {}
+unsafe impl Pod for SceModuleExportCommon {}
 
 pub type SceModuleImport = SceModuleImportSized34;
 
 #[repr(transparent)]
-#[derive(Copy, Clone, Debug, Zeroable, Pod)]
+#[derive(Copy, Clone, Debug)]
 pub struct FunctionStubPlaceholder {
     pub text: [u32; 4],
 }
+
+unsafe impl Zeroable for SceModuleExportCommon {}
+unsafe impl Pod for SceModuleExportCommon {}
 
 impl Default for FunctionStubPlaceholder {
     fn default() -> Self {
@@ -92,13 +104,17 @@ impl FunctionStubPlaceholder {
     };
 }
 
-/// TODO
-#[repr(C)]
-#[derive(Copy, Clone, Debug, Zeroable, Pod)]
-pub struct SceVariableRelocations {
-    pub length: USize,
-    pub relocations: Ptr<()>,
+bitfield! {
+    #[derive(Copy, Clone, Debug)]
+    pub struct SceVarImportsHeader(u32);
+    impl Debug;
+    pub unk, set_unk: 7, 0;
+    pub reloc_count, set_reloc_count: 23, 8;
+    pub pad, set_pad: 31, 24;
 }
+
+unsafe impl Zeroable for SceModuleExportCommon {}
+unsafe impl Pod for SceModuleExportCommon {}
 
 #[cfg(test)]
 #[test]

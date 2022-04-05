@@ -1,10 +1,7 @@
-use log::debug;
-use psvita_linker::input::Input;
-
 fn main() {
-    pretty_env_logger::init_custom_env("PSVITA_LINKER_LOG");
+    tracing_subscriber::FmtSubscriber::builder()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_env("PSVITA_LINKER_LOG"))
+        .init();
 
-    let input = Input::from_args();
-    debug!("Parsed input as: {:#?}", &input);
-    todo!()
+    psvita_linker::run();
 }

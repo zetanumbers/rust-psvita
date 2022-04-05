@@ -87,15 +87,15 @@ fn copy_target_configuration(target_dir: &Utf8Path) {
 
 fn build(opt: &Opt, metadata: &Metadata) -> Vec<Utf8PathBuf> {
     let rustflags = env::var("RUSTFLAGS").unwrap_or_default();
-    let rustflags = format!(
-        "{} -L {}",
-        rustflags,
-        vitasdk()
-            .join("arm-vita-eabi")
-            .join("lib")
-            .to_str()
-            .unwrap()
-    );
+    // let rustflags = format!(
+    //     "{} -L {}",
+    //     rustflags,
+    //     vitasdk()
+    //         .join("arm-vita-eabi")
+    //         .join("lib")
+    //         .to_str()
+    //         .unwrap()
+    // );
 
     let out = Command::new(env::var("CARGO").unwrap_or(String::from("cargo")))
         .arg("build")

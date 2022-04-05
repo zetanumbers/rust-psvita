@@ -3,6 +3,10 @@ use ld_version_script::TrivialVersionScript;
 use once_cell::unsync::OnceCell;
 use std::{env, fs, path::PathBuf};
 
+pub struct PassThroughArgs {
+    pub files: Vec<InputFile>,
+}
+
 #[derive(Debug)]
 pub struct Input {
     pub input_files: Vec<InputFile>,
@@ -27,8 +31,7 @@ pub enum OutputOptions {
 #[derive(Debug)]
 pub struct InputFile {
     pub path: PathBuf,
-    pub gc_sections: bool,
-    pub whole_archive: bool,
+    pub params: ArtifactParams,
 }
 
 #[derive(Debug)]
@@ -37,6 +40,18 @@ pub struct InputLibrary {
     pub only_static: bool,
     pub gc_sections: bool,
     pub whole_archive: bool,
+}
+
+#[derive(Debug)]
+pub struct ArtifactParams {
+    pub gc_sections: bool,
+    pub whole_archive: bool,
+}
+
+#[derive(Debug)]
+pub struct UnresolvedLibrary {
+    pub name: ld_compat_args::Library,
+    pub only_static: bool,
 }
 
 impl Input {

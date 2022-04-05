@@ -1,7 +1,5 @@
-use bytemuck::{Pod, Zeroable};
-
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Zeroable, Pod)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Nid(pub u32);
 
 impl std::fmt::Debug for Nid {

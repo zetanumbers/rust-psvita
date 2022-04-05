@@ -9,4 +9,3 @@ pub enum ItemType {
     Variable,
     TLS,
 }
-
